@@ -11,9 +11,6 @@ def scan_network(ip):
     clients = []
     for element in answered_list:
         clients.append({'ip': element[1].psrc, 'mac': element[1].hwsrc})
-
-    print(f"[*] {len(clients)} hôtes découverts.")
-    for client in clients:
-        print(f"    - IP: {client['ip']}\tMAC: {client['mac']}")
     
-    return [client['ip'] for client in clients]
+    # Retourne la liste complète des dictionnaires client (IP et MAC)
+    return clients
