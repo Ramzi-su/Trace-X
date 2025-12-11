@@ -21,15 +21,15 @@ def print_banner():
     """Affiche la bannière de l'application."""
     banner = f"""
   {Colors.CYAN}╔═══════════════════════════════════════════════════════════════════╗
-  ║ {Colors.BOLD}   ████████╗██████╗  █████╗  ██████╗███████╗    ██╗  ██╗           {Colors.CYAN}║
-  ║ {Colors.BOLD}   ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝    ╚██╗██╔╝           {Colors.CYAN}║
-  ║ {Colors.BOLD}      ██║   ██████╔╝███████║██║     █████╗       ╚███╔╝            {Colors.CYAN}║
-  ║ {Colors.BOLD}      ██║   ██╔══██╗██╔══██║██║     ██╔══╝       ██╔██╗            {Colors.CYAN}║
-  ║ {Colors.BOLD}      ██║   ██║  ██║██║  ██║╚██████╗███████╗    ██╔╝ ██╗           {Colors.CYAN}║
-  ║ {Colors.BOLD}      ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝    ╚═╝  ╚═╝           {Colors.CYAN}║
+  ║ {Colors.BOLD}   ████████╗██████╗  █████╗  ██████╗███████╗    ██╗  ██╗          {Colors.CYAN}║
+  ║ {Colors.BOLD}   ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝    ╚██╗██╔╝          {Colors.CYAN}║
+  ║ {Colors.BOLD}      ██║   ██████╔╝███████║██║     █████╗       ╚███╔╝           {Colors.CYAN}║
+  ║ {Colors.BOLD}      ██║   ██╔══██╗██╔══██║██║     ██╔══╝       ██╔██╗           {Colors.CYAN}║
+  ║ {Colors.BOLD}      ██║   ██║  ██║██║  ██║╚██████╗███████╗    ██╔╝ ██╗          {Colors.CYAN}║
+  ║ {Colors.BOLD}      ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝    ╚═╝  ╚═╝          {Colors.CYAN}║
   ║                                                                   ║
-  ║      {Colors.YELLOW}📡  A Network Discovery & Port Scanning Tool 💻{Colors.CYAN}        ║
-  ║                       {Colors.RED}By Moulahi Ramzi{Colors.CYAN}                       ║
+  ║      {Colors.YELLOW}📡  A Network Discovery & Port Scanning Tool 💻{Colors.CYAN}              ║
+  ║                       {Colors.RED}By Moulahi Ramzi{Colors.CYAN}                            ║
   ╚═══════════════════════════════════════════════════════════════════╝{Colors.RESET}
 """
     print(banner)
