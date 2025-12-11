@@ -20,16 +20,17 @@ class Colors:
 def print_banner():
     """Affiche la bannière de l'application."""
     banner = f"""
-{Colors.CYAN}{Colors.BOLD}
- ████████╗██████╗  █████╗  ██████╗███████╗    ██╗  ██╗
- ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝    ╚██╗██╔╝
-    ██║   ██████╔╝███████║██║     █████╗       ╚███╔╝ 
-    ██║   ██╔══██╗██╔══██║██║     ██╔══╝       ██╔██╗ 
-    ██║   ██║  ██║██║  ██║╚██████╗███████╗    ██╔╝ ██╗
-    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝    ╚═╝  ╚═╝
-{Colors.RESET}
-        {Colors.YELLOW}A Network Discovery & Port Scanning Tool{Colors.RESET}
-              {Colors.RED}By Moulahi Ramzi{Colors.RESET}
+  {Colors.CYAN}╔═══════════════════════════════════════════════════════════════════╗
+  ║ {Colors.BOLD}   ████████╗██████╗  █████╗  ██████╗███████╗    ██╗  ██╗           {Colors.CYAN}║
+  ║ {Colors.BOLD}   ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝    ╚██╗██╔╝           {Colors.CYAN}║
+  ║ {Colors.BOLD}      ██║   ██████╔╝███████║██║     █████╗       ╚███╔╝            {Colors.CYAN}║
+  ║ {Colors.BOLD}      ██║   ██╔══██╗██╔══██║██║     ██╔══╝       ██╔██╗            {Colors.CYAN}║
+  ║ {Colors.BOLD}      ██║   ██║  ██║██║  ██║╚██████╗███████╗    ██╔╝ ██╗           {Colors.CYAN}║
+  ║ {Colors.BOLD}      ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝    ╚═╝  ╚═╝           {Colors.CYAN}║
+  ║                                                                   ║
+  ║      {Colors.YELLOW}📡  A Network Discovery & Port Scanning Tool 💻{Colors.CYAN}        ║
+  ║                       {Colors.RED}By Moulahi Ramzi{Colors.CYAN}                       ║
+  ╚═══════════════════════════════════════════════════════════════════╝{Colors.RESET}
 """
     print(banner)
 
@@ -72,32 +73,63 @@ def display_results(clients, port_scan_results):
             for port_info in host_result['ports']:
                 print(f"    - Port {Colors.YELLOW}{port_info['port']:<5}{Colors.RESET} | Service: {port_info['service']}")
 
+def run_scan(clients, host_ips):
+    """Exécute le scan de ports et affiche les résultats."""
+    if not clients:
+        print(f"{Colors.RED}[!] Aucun hôte actif trouvé à scanner.{Colors.RESET}")
+        return
+
+    print(f"{Colors.GREEN}[*] {len(clients)} hôte(s) à scanner.{Colors.RESET}")
+    port_scan_results = scan_hosts_ports(host_ips)
+    display_results(clients, port_scan_results)
+
 def main():
     """Fonction principale."""
     print_banner()
 
     # Vérifie si le script est exécuté avec les privilèges root (UID 0)
     if os.geteuid() != 0:
-        print(f"{Colors.RED}[!] Ce script nécessite des privilèges root pour scanner le réseau.{Colors.RESET}")
-        print(f"{Colors.YELLOW}[!] Veuillez l'exécuter avec sudo ou avec les capacités appropriées (ex: sudo setcap cap_net_raw,cap_net_admin+eip $(which python3)).{Colors.RESET}")
+        print(f"{Colors.RED}[!] Ce script nécessite des privilèges root. Veuillez l'exécuter avec 'sudo'.{Colors.RESET}")
         return
 
-    print(f"{Colors.YELLOW}[*] Lancement du scan automatique du réseau...{Colors.RESET}")
-    network_range = get_network_range()
-    if network_range:
-        clients = scan_network(network_range)
-        if clients:
-            print(f"{Colors.GREEN}[*] {len(clients)} hôtes découverts.{Colors.RESET}")
-            for client in clients:
-                print(f"    - IP: {Colors.BLUE}{client['ip']:<15}{Colors.RESET} MAC: {client['mac']}")
+    while True:
+        print(f"\n{Colors.BOLD}--- MENU PRINCIPAL ---{Colors.RESET}")
+        print("1. Scanner le réseau local (Détection automatique)")
+        print("2. Scanner une cible spécifique (IP ou réseau CIDR)")
+        print("3. Quitter")
+        choice = input(f"{Colors.YELLOW}>> Votre choix : {Colors.RESET}")
+
+        if choice == '1':
+            print(f"\n{Colors.YELLOW}[*] Lancement du scan automatique du réseau...{Colors.RESET}")
+            network_range = get_network_range()
+            if not network_range:
+                print(f"{Colors.RED}[!] Impossible de déterminer la plage réseau automatiquement.{Colors.RESET}")
+                continue
             
-            # Extrait les adresses IP pour le scan de ports
+            clients = scan_network(network_range)
             host_ips = [client['ip'] for client in clients]
-            port_scan_results = scan_hosts_ports(host_ips)
-            
-            display_results(clients, port_scan_results)
-    else:
-        print(f"{Colors.RED}[!] Impossible de déterminer la plage réseau automatiquement.{Colors.RESET}")
+            run_scan(clients, host_ips)
+
+        elif choice == '2':
+            target = input(f"{Colors.YELLOW}>> Entrez l'IP ou la plage CIDR (ex: 192.168.1.50 ou 192.168.1.0/24) : {Colors.RESET}")
+            if not target:
+                print(f"{Colors.RED}[!] Cible invalide.{Colors.RESET}")
+                continue
+
+            print(f"\n{Colors.YELLOW}[*] Lancement du scan sur la cible : {target}{Colors.RESET}")
+            if "/" in target: # C'est une plage CIDR
+                clients = scan_network(target)
+                host_ips = [client['ip'] for client in clients]
+            else: # C'est une IP unique
+                clients = [{'ip': target, 'mac': 'N/A'}]
+                host_ips = [target]
+            run_scan(clients, host_ips)
+
+        elif choice == '3':
+            print(f"{Colors.CYAN}Au revoir !{Colors.RESET}")
+            break
+        else:
+            print(f"{Colors.RED}[!] Choix invalide, veuillez réessayer.{Colors.RESET}")
 
 if __name__ == "__main__":
     try:
