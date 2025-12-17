@@ -8,25 +8,23 @@ services:
     restart: always
     network_mode: "host"
     privileged: true
-    # --- Performance & Sécurité ---
     pids_limit: 4096
     mem_limit: 1024m
-    # ---------------------------
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     volumes:
       - .:/app
-    # 👇 C'EST LA LIGNE QUI MANQUAIT ! 👇
-    # Elle dit à Docker : "Lance le fichier du site Web"
     command: python3 app.py
 
-  # 2. Le Dashboard de Monitoring
+  # 2. Le Dashboard de Monitoring (Glances)
   monitor:
     image: nicolargo/glances:latest-full
     container_name: tracex_dashboard
     restart: always
     pid: host
     network_mode: "host"
+    environment:
+      - "GLANCES_OPT=-w"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
