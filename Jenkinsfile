@@ -11,9 +11,9 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    echo "🔨 Construction avec Docker..."
-                    // On utilise 'docker' car tu as podman-docker installé
-                    sh "sudo docker build -t ${IMAGE_NAME}:latest ."
+                    echo "🔨 Construction avec Docker (Sans Cache)..."
+                    // 👇 AJOUT DE --no-cache ICI
+                    sh "sudo docker build --no-cache -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
