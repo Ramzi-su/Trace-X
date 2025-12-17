@@ -3,39 +3,53 @@ pipeline {
 
     environment {
         IMAGE_NAME = "trace-x-app"
+        // Remplace par ta vraie clé ou configure-la dans les secrets Jenkins plus tard
+        GOOGLE_API_KEY = "TA_CLE_GOOGLE_ICI_OU_LAISSE_VIDE_POUR_TEST"
     }
 
     stages {
-        // J'ai supprimé l'étape "Nettoyage" ici car elle effaçait ton code !
-        
-        // Étape 1 : Construction
         stage('Build Image') {
             steps {
                 script {
-                    echo "Construction de l'image..."
-                    // AJOUT DE SUDO : Indispensable car l'user jenkins n'est pas configuré pour le rootless
+                    echo "🔨 Construction de l'image..."
                     sh "sudo podman build -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
 
-        // Étape 2 : Test
         stage('Test') {
             steps {
                 script {
-                    echo "Lancement du test..."
-                    // AJOUT DE SUDO ici aussi
+                    echo "🧪 Test de démarrage..."
                     sh "sudo podman run --rm --privileged ${IMAGE_NAME}:latest python --version"
+                }
+            }
+        }
+
+        // --- C'est ici que la magie opère (CD) ---
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "🚀 Déploiement en cours..."
+                    // 1. On éteint les anciens conteneurs s'ils existent
+                    try {
+                        sh "sudo podman-compose down"
+                    } catch (Exception e) {
+                        echo "Rien à éteindre, on continue."
+                    }
+                    
+                    // 2. On lance les nouveaux (en mode détaché -d)
+                    sh "sudo podman-compose up -d"
                 }
             }
         }
     }
 
-    // Le nettoyage se fait TOUJOURS à la fin, qu'il y ait réussite ou échec
     post {
         always {
-            cleanWs()
-            echo "Nettoyage de l'espace de travail terminé."
+            // Note: On n'efface PAS l'espace de travail (cleanWs) tout de suite
+            // car podman-compose a besoin du fichier docker-compose.yml qui est dedans !
+            echo "✅ Déploiement terminé."
         }
     }
 }
