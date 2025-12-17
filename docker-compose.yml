@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # 1. Ton Application Trace-X
+  app:
+    # On utilise l'image que Jenkins vient de construire
+    image: trace-x-app:latest
+    container_name: tracex_server
+    restart: always
+    network_mode: "host" # OBLIGATOIRE pour scanner le vrai réseau
+    privileged: true     # OBLIGATOIRE pour Scapy
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - .:/app
+
+  # 2. Le Dashboard de Monitoring
+  monitor:
+    image: nicolargo/glances:latest-full
+    container_name: tracex_dashboard
+    restart: always
+    pid: host
+    network_mode: "host"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # 3. Le Terminal (Optionnel, juste pour garder la logique)
+  terminal:
+    image: trace-x-app:latest
+    container_name: tracex_terminal
+    network_mode: "host"
+    privileged: true
+    command: tail -f /dev/null
