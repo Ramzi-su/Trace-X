@@ -228,5 +228,10 @@ async def handle_shutdown(sid):
     # 3. On attend 1 seconde pour que le message 'status_update' ait le temps de partir
     loop = asyncio.get_running_loop()
     loop.call_later(1, kill_server)
-if __name__ == '__main__':
-    print("Lancez avec : sudo .venv/bin/uvicorn app:app --host 0.0.0.0 --port 5000")
+if __name__ == "__main__":
+    import uvicorn
+    # On force le lancement du serveur ici
+    uvicorn.run(app, host="0.0.0.0", port=5000)
+#if __name__ == '__main__':
+#   print("Lancez avec : sudo .venv/bin/uvicorn app:app --host 0.0.0.0 --port 5000")
+ 
