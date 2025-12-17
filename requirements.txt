@@ -7,3 +7,5 @@ scapy
 netifaces
 requests
 tqdm
+jinja2
+importlib-metadata
