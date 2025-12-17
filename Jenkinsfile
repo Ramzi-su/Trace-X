@@ -3,16 +3,16 @@ pipeline {
 
     environment {
         IMAGE_NAME = "trace-x-app"
-        // Remplace par ta vraie clé ou configure-la dans les secrets Jenkins plus tard
-        GOOGLE_API_KEY = "TA_CLE_GOOGLE_ICI_OU_LAISSE_VIDE_POUR_TEST"
+        GOOGLE_API_KEY = "TA_CLE_ICI"
     }
 
     stages {
         stage('Build Image') {
             steps {
                 script {
-                    echo "🔨 Construction de l'image..."
-                    sh "sudo podman build -t ${IMAGE_NAME}:latest ."
+                    echo "🔨 Construction..."
+                    // On utilise 'docker' au lieu de 'podman'
+                    sh "sudo docker build -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
@@ -20,26 +20,24 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    echo "🧪 Test de démarrage..."
-                    sh "sudo podman run --rm --privileged ${IMAGE_NAME}:latest python --version"
+                    echo "🧪 Test..."
+                    // Idem ici
+                    sh "sudo docker run --rm --privileged ${IMAGE_NAME}:latest python --version"
                 }
             }
         }
 
-        // --- C'est ici que la magie opère (CD) ---
         stage('Deploy') {
             steps {
                 script {
-                    echo "🚀 Déploiement en cours..."
-                    // 1. On éteint les anciens conteneurs s'ils existent
+                    echo "🚀 Déploiement..."
                     try {
-                        sh "sudo podman-compose down"
+                        // On utilise 'docker-compose'
+                        sh "sudo docker-compose down"
                     } catch (Exception e) {
-                        echo "Rien à éteindre, on continue."
+                        echo "Rien à éteindre."
                     }
-                    
-                    // 2. On lance les nouveaux (en mode détaché -d)
-                    sh "sudo podman-compose up -d"
+                    sh "sudo docker-compose up -d"
                 }
             }
         }
@@ -47,9 +45,7 @@ pipeline {
 
     post {
         always {
-            // Note: On n'efface PAS l'espace de travail (cleanWs) tout de suite
-            // car podman-compose a besoin du fichier docker-compose.yml qui est dedans !
-            echo "✅ Déploiement terminé."
+            echo "✅ Terminé."
         }
     }
 }
