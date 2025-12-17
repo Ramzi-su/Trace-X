@@ -229,4 +229,4 @@ async def handle_shutdown(sid):
     loop = asyncio.get_running_loop()
     loop.call_later(1, kill_server)
 if __name__ == '__main__':
-    print("Lancez avec : sudo .venv/bin/uvicorn app:app --host 127.0.0.1 --port 5000")
+    print("Lancez avec : sudo .venv/bin/uvicorn app:app --host 0.0.0.0 --port 5000")
