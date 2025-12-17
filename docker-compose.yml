@@ -8,16 +8,17 @@ services:
     restart: always
     network_mode: "host"
     privileged: true
-    # --- CORRECTION DU CRASH ---
-    # Autorise jusqu'à 4096 threads/processus (le défaut est souvent trop bas)
+    # --- Performance & Sécurité ---
     pids_limit: 4096
-    # Sécurité : Limite la RAM à 1Go pour ne pas faire planter la VM
     mem_limit: 1024m
     # ---------------------------
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     volumes:
       - .:/app
+    # 👇 C'EST LA LIGNE QUI MANQUAIT ! 👇
+    # Elle dit à Docker : "Lance le fichier du site Web"
+    command: python3 app.py
 
   # 2. Le Dashboard de Monitoring
   monitor:
@@ -35,7 +36,5 @@ services:
     container_name: tracex_terminal
     network_mode: "host"
     privileged: true
-    # --- CORRECTION DU CRASH ---
     pids_limit: 4096
-    # ---------------------------
     command: tail -f /dev/null
