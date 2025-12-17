@@ -1,52 +1,53 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = "trace-x-app"
-        // Configure ta clé API ici ou laisse vide pour tester
-        GOOGLE_API_KEY = "TA_CLE_GOOGLE_ICI"
-    }
-
     stages {
-        stage('Build Image') {
+        stage('1. Checkout Code') {
+            steps {
+                // Jenkins récupère la dernière version de ton code
+                git branch: 'main', url: 'https://github.com/Ramzi-su/Trace-X.git'
+            }
+        }
+
+        stage('2. Nettoyage & Démarrage VM') {
             steps {
                 script {
-                    echo "🔨 Construction avec Docker (Sans Cache)..."
-                    // 👇 AJOUT DE --no-cache ICI
-                    sh "sudo docker build --no-cache -t ${IMAGE_NAME}:latest ."
+                    echo " Démarrage de l'environnement de test..."
+                    // On s'assure qu'aucune vieille VM ne traîne
+                    sh 'vagrant destroy -f || true'
+                    // On lance la VM (ça prendra quelques minutes la première fois)
+                    sh 'vagrant up'
                 }
             }
         }
 
-        stage('Test') {
+        stage('3. Tests d\'Intégration') {
             steps {
                 script {
-                    echo "🧪 Test de démarrage..."
-                    sh "sudo docker run --rm --privileged ${IMAGE_NAME}:latest python --version"
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    echo "🚀 Déploiement avec Compose..."
-                    try {
-                        // On éteint proprement avant de relancer
-                        sh "sudo docker-compose down"
-                    } catch (Exception e) {
-                        echo "Première fois : rien à éteindre."
-                    }
-                    // On lance tout en arrière-plan (-d)
-                    sh "sudo docker-compose up -d"
+                    echo "🧪 Lancement des tests DANS la VM..."
+                    
+                    // Test 1 : Vérifier que Docker a bien lancé les conteneurs
+                    sh 'vagrant ssh -c "docker ps | grep tracex_server"'
+                    
+                    // Test 2 : Vérifier que le site répond (Code HTTP 200)
+                    // On attend 15s que le serveur Python démarre bien
+                    sh 'vagrant ssh -c "sleep 15 && curl -f http://localhost:5000"'
                 }
             }
         }
     }
 
     post {
+        // Cette partie s'exécute TOUJOURS, même si ça plante
         always {
-            echo "✅ Pipeline terminé."
+            echo " Nettoyage : Destruction de la VM de test..."
+            sh 'vagrant destroy -f'
+        }
+        success {
+            echo " Le déploiement et les tests sont validés."
+        }
+        failure {
+            echo "quelque chose s'est mal passé."
         }
     }
 }
