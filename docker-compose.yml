@@ -1,14 +1,19 @@
 version: '3.8'
 
 services:
-  # 1. Ton Application Trace-X
+  # 1. Ton Application Trace-X (Serveur Web)
   app:
-    # On utilise l'image que Jenkins vient de construire
     image: trace-x-app:latest
     container_name: tracex_server
     restart: always
-    network_mode: "host" # OBLIGATOIRE pour scanner le vrai réseau
-    privileged: true     # OBLIGATOIRE pour Scapy
+    network_mode: "host"
+    privileged: true
+    # --- CORRECTION DU CRASH ---
+    # Autorise jusqu'à 4096 threads/processus (le défaut est souvent trop bas)
+    pids_limit: 4096
+    # Sécurité : Limite la RAM à 1Go pour ne pas faire planter la VM
+    mem_limit: 1024m
+    # ---------------------------
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     volumes:
@@ -24,10 +29,13 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  # 3. Le Terminal (Optionnel, juste pour garder la logique)
+  # 3. Le Terminal (Pour tes commandes manuelles)
   terminal:
     image: trace-x-app:latest
     container_name: tracex_terminal
     network_mode: "host"
     privileged: true
+    # --- CORRECTION DU CRASH ---
+    pids_limit: 4096
+    # ---------------------------
     command: tail -f /dev/null

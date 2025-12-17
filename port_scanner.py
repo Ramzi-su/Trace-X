@@ -22,11 +22,33 @@ def port_scan(ip):
     """
     Scanne les ports 1 à 1024 sur une IP spécifique en utilisant des sockets et le multithreading.
     """
+
+
+
+
+
+
+    # a changer la plage de ports sans podman
+
+
+
+
     open_ports_info = []
-    ports_to_scan = range(1, 65536) # Étend la plage à tous les ports possibles
+    ports_to_scan = range(1, 1025) # Étend la plage à tous les ports possibles
 
     # Utilise ThreadPoolExecutor pour scanner les ports en parallèle
-    with ThreadPoolExecutor(max_workers=200) as executor:
+
+
+
+
+    # a changer sans podman  
+
+
+
+
+
+
+    with ThreadPoolExecutor(max_workers=50) as executor:
         # Crée une tâche pour chaque port à scanner
         future_to_port = {executor.submit(scan_single_port, ip, port): port for port in ports_to_scan}
 
