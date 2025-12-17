@@ -73,6 +73,63 @@ def display_results(clients, port_scan_results):
             for port_info in host_result['ports']:
                 print(f"    - Port {Colors.YELLOW}{port_info['port']:<5}{Colors.RESET} | Service: {port_info['service']}")
 
+def chat_with_ai(scan_results):
+    """Gère la discussion avec l'IA (Gemini Pro) en se basant sur les résultats du scan."""
+    try:
+        import google.generativeai as genai
+        from dotenv import load_dotenv
+    except ImportError:
+        print(f"{Colors.RED}[!] Des bibliothèques sont manquantes. Installez-les avec 'pip install google-generativeai python-dotenv'.{Colors.RESET}")
+        return
+
+    load_dotenv()  # Charge les variables d'environnement depuis le fichier .env
+    api_key = os.getenv("GOOGLE_API_KEY")
+    
+    if not api_key:
+        print(f"{Colors.RED}[!] La clé API de Google n'est pas configurée via la variable d'environnement 'GOOGLE_API_KEY'.{Colors.RESET}")
+        print(f"{Colors.YELLOW}Pour une utilisation sécurisée et permanente, il est fortement recommandé de la définir avec : export GOOGLE_API_KEY='VOTRE_CLE_API'{Colors.RESET}")
+        # Permet de saisir la clé pour la session actuelle de manière non sécurisée (visible dans l'historique du shell)
+        api_key = input(f"{Colors.YELLOW}>> Entrez votre clé API pour la session actuelle (ne sera pas sauvegardée) : {Colors.RESET}")
+        if not api_key:
+            print(f"{Colors.RED}[!] Aucune clé API fournie. Retour au menu principal.{Colors.RESET}")
+            return
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-flash-latest')
+    chat = model.start_chat(history=[])
+
+    print(f"\n{Colors.CYAN}--- Chat avec l'IA (Gemini Pro) ---{Colors.RESET}")
+    print(f"{Colors.YELLOW}Vous pouvez maintenant poser des questions sur les résultats du scan ou sur des sujets de sécurité réseau.{Colors.RESET}")
+    print("Tapez 'quitter' pour revenir au menu principal.")
+
+    # Fournir le contexte du scan à l'IA pour une meilleure analyse
+    if scan_results:
+        context_message = "Agis comme un expert en cybersécurité. Voici les résultats du dernier scan réseau que j'ai effectué. Analyse-les et prépare-toi à répondre à mes questions à ce sujet de manière détaillée et précise : \n"
+        context_message += str(scan_results)
+        print(f"{Colors.BLUE}[AI] Envoi du contexte du scan à l'IA...{Colors.RESET}")
+        try:
+            # On n'affiche pas la première réponse pour garder l'interface propre
+            chat.send_message(context_message)
+        except Exception as e:
+            print(f"{Colors.RED}[!] Erreur lors de la communication avec l'API Gemini : {e}{Colors.RESET}")
+            return
+    else:
+        print(f"{Colors.YELLOW}[!] Aucun scan n'a encore été effectué. L'IA n'aura pas de contexte sur votre réseau.{Colors.RESET}")
+
+    while True:
+        user_input = input(f"{Colors.GREEN}>> Vous : {Colors.RESET}")
+        if user_input.lower() in ['quitter', 'exit']:
+            break
+        if not user_input:
+            continue
+        try:
+            response = chat.send_message(user_input)
+            print(f"{Colors.BLUE}[AI]: {response.text}{Colors.RESET}")
+        except Exception as e:
+            print(f"{Colors.RED}[!] Erreur lors de la communication avec l'API Gemini : {e}{Colors.RESET}")
+            print(f"{Colors.YELLOW}Veuillez vérifier votre connexion ou la validité de votre clé API. Si le problème persiste, essayez de mettre à jour la bibliothèque : pip install --upgrade google-generativeai{Colors.RESET}")
+            # On ne quitte plus la boucle pour permettre à l'utilisateur de réessayer.
+
 def run_scan(clients, host_ips):
     """Exécute le scan de ports et affiche les résultats."""
     if not clients:
@@ -82,10 +139,12 @@ def run_scan(clients, host_ips):
     print(f"{Colors.GREEN}[*] {len(clients)} hôte(s) à scanner.{Colors.RESET}")
     port_scan_results = scan_hosts_ports(host_ips)
     display_results(clients, port_scan_results)
+    return port_scan_results
 
 def main():
     """Fonction principale."""
     print_banner()
+    latest_scan_results = []  # Pour stocker les derniers résultats de scan
 
     # Vérifie si le script est exécuté avec les privilèges root (UID 0)
     if os.geteuid() != 0:
@@ -96,7 +155,8 @@ def main():
         print(f"\n{Colors.BOLD}--- MENU PRINCIPAL ---{Colors.RESET}")
         print("1. Scanner le réseau local (Détection automatique)")
         print("2. Scanner une cible spécifique (IP ou réseau CIDR)")
-        print("3. Quitter")
+        print("3. Discuter avec une IA (sur le dernier scan)")
+        print("4. Quitter")
         choice = input(f"{Colors.YELLOW}>> Votre choix : {Colors.RESET}")
 
         if choice == '1':
@@ -108,7 +168,7 @@ def main():
             
             clients = scan_network(network_range)
             host_ips = [client['ip'] for client in clients]
-            run_scan(clients, host_ips)
+            latest_scan_results = run_scan(clients, host_ips)
 
         elif choice == '2':
             target = input(f"{Colors.YELLOW}>> Entrez l'IP ou la plage CIDR (ex: 192.168.1.50 ou 192.168.1.0/24) : {Colors.RESET}")
@@ -117,15 +177,17 @@ def main():
                 continue
 
             print(f"\n{Colors.YELLOW}[*] Lancement du scan sur la cible : {target}{Colors.RESET}")
-            if "/" in target: # C'est une plage CIDR
-                clients = scan_network(target)
-                host_ips = [client['ip'] for client in clients]
-            else: # C'est une IP unique
-                clients = [{'ip': target, 'mac': 'N/A'}]
-                host_ips = [target]
-            run_scan(clients, host_ips)
+            clients = scan_network(target)
+            if not clients:
+                print(f"{Colors.RED}[!] Aucun hôte actif trouvé pour la cible '{target}'.{Colors.RESET}")
+                continue
+            host_ips = [client['ip'] for client in clients]
+            latest_scan_results = run_scan(clients, host_ips)
 
         elif choice == '3':
+            chat_with_ai(latest_scan_results)
+
+        elif choice == '4':
             print(f"{Colors.CYAN}Au revoir !{Colors.RESET}")
             break
         else:

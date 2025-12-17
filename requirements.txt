@@ -1,3 +1,9 @@
+fastapi
+uvicorn
+python-socketio
+google-generativeai
+python-dotenv
 scapy
-python-nmap
 netifaces
+requests
+tqdm

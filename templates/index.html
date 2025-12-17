@@ -6,40 +6,38 @@
     <title>Trace-X | Network Scanner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #121212; color: #e0e0e0; }
-        .navbar, .card { background-color: #1e1e1e !important; }
-        .card { border: 1px solid #333; transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0, 255, 255, 0.1); }
-        .card-header { background-color: #252525; border-bottom: 1px solid #333; }
-        .status-bar { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1e1e1e; padding: 10px; border-top: 1px solid #333; z-index: 1000; }
-        .btn-group .btn { margin: 0 5px; }
-        /* Styles pour le défilement de la zone de résultats */
-        #results {
-            /* Hauteur calculée: 100% de la hauteur de la vue moins la nav, le statut et les marges */
-            max-height: calc(100vh - 150px); 
-            overflow-y: auto; /* Ajoute une barre de défilement verticale si nécessaire */
-            padding-right: 15px; /* Espace pour la barre de défilement */
-            padding-bottom: 20px; /* Espace en bas */
-        }
-        #initial-placeholder { text-align: center; margin-top: 20vh; color: #6c757d; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="bi bi-diagram-3-fill text-info"></i> 
-                <span class="fw-bold text-info">Trace-X</span>
-            </a>
-            <div class="btn-group">
-                <button id="networkScanBtn" class="btn btn-primary">
-                    <i class="bi bi-wifi"></i> Scanner le Réseau
-                </button>
-                <button id="portScanBtn" class="btn btn-secondary" disabled>
-                    <i class="bi bi-search"></i> Analyser les Ports
-                </button>
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand d-flex align-items-center" href="#">
+                    <i class="bi bi-diagram-3-fill text-info me-2"></i> 
+                    <span class="fw-bold text-info me-3">Trace-X</span>
+                </a>
+                <a href="https://www.linkedin.com/in/ramzi-moulahi-066b61303" target="_blank" class="d-flex flex-column border border-secondary rounded px-2 py-1 bg-dark bg-opacity-25 text-decoration-none">
+                    <small class="text-white-50" style="font-size: 0.65rem; line-height: 1;">Developed by</small>
+                    <span class="text-warning fw-bold" style="font-size: 0.85rem; line-height: 1.2;">Ramzi Moulahi <i class="bi bi-patch-check-fill"></i></span>
+                </a>
+            </div>
+            <div class="btn-group" style="width: 60%; margin: 0 auto;">
+                <div class="btn-group" id="mainBtnGroup">
+                    <button id="networkScanBtn" class="btn btn-primary">
+                        <i class="bi bi-wifi"></i> Scanner le Réseau
+                    </button>
+                    <input type="text" id="targetInput" class="form-control mx-2" placeholder="Ou analyser une IP/CIDR...">
+                    <button id="portScanBtn" class="btn btn-secondary" disabled>
+                        <i class="bi bi-search"></i> Analyser la Cible
+                    </button>
+                    <button id="chatBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#chatModal">
+                        <i class="bi bi-robot"></i> Discuter avec l'IA
+                    </button>
+                    <button id="shutdownBtn" class="btn btn-danger ms-2" title="Arrêter le serveur">
+                         <i class="bi bi-power"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
@@ -47,7 +45,7 @@
     <div class="container mt-4">
         <div id="results" class="row g-4">
             <div id="initial-placeholder" class="col-12">
-                <h3><i class="bi bi-binoculars"></i></i> En attente d'un scan réseau...</h3>
+                <h3><i class="bi bi-binoculars"></i> En attente d'un scan réseau...</h3>
                 <p>Cliquez sur "Scanner le Réseau" pour commencer.</p>
             </div>
         </div>
@@ -57,129 +55,35 @@
         <span id="statusText">En attente de connexion...</span>
     </div>
 
+    <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chatModalLabel"><i class="bi bi-robot"></i> Chat avec l'IA</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chat-window">
+                        <div class="ai-message chat-message">Bonjour ! Une fois le scan de ports terminé, je pourrai analyser les résultats pour vous.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <form id="chat-form" class="w-100 d-flex">
+                        <input type="text" id="chat-input" class="form-control me-2" placeholder="Posez votre question..." autocomplete="off">
+                        <button type="submit" class="btn btn-info"><i class="bi bi-send"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="{{ url_for('static', path='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const socket = io();
-            const networkScanBtn = document.getElementById('networkScanBtn');
-            const portScanBtn = document.getElementById('portScanBtn');
-            const resultsContainer = document.getElementById('results');
-            const statusText = document.getElementById('statusText');
-            const placeholder = document.getElementById('initial-placeholder');
 
-            let discoveredHosts = [];
-
-            // --- Gestion des événements Socket.IO ---
-
-            socket.on('connect', () => {
-                statusText.innerHTML = `<span class="text-success">Connecté au serveur. Prêt à scanner.</span>`;
-            });
-
-            socket.on('disconnect', () => {
-                statusText.innerHTML = `<span class="text-danger">Déconnecté du serveur.</span>`;
-            });
-
-            socket.on('status_update', (data) => {
-                let levelClass = 'text-white';
-                if (data.level === 'error') levelClass = 'text-danger';
-                if (data.level === 'success') levelClass = 'text-success';
-                if (data.level === 'warning') levelClass = 'text-warning';
-                statusText.innerHTML = `<span class="${levelClass}">${data.msg}</span>`;
-            });
-
-            socket.on('host_discovered', (host) => {
-                if (placeholder) {
-                    placeholder.style.display = 'none';
-                }
-                
-                // Évite les doublons
-                if (discoveredHosts.some(h => h.ip === host.ip)) return;
-
-                discoveredHosts.push(host);
-                portScanBtn.disabled = false;
-                portScanBtn.classList.replace('btn-secondary', 'btn-info');
-
-                const cardHtml = `
-                    <div class="col-md-6 col-lg-4" id="host-${host.ip.replace(/\./g, '-')}">
-                        <div class="card">
-                            <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-pc-display"></i> ${host.ip}</span>
-                                <span class="badge bg-secondary" id="type-${host.ip.replace(/\./g, '-')}">En attente</span>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text mb-2">
-                                    <strong>MAC:</strong> ${host.mac}<br>
-                                    <strong>Fabricant:</strong> ${host.vendor}
-                                </p>
-                                <div id="ports-${host.ip.replace(/\./g, '-')}">
-                                    <small class="text-muted">Analyse des ports non effectuée.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                resultsContainer.innerHTML += cardHtml;
-            });
-
-            socket.on('scan_result', (result) => {
-                const typeElement = document.getElementById(`type-${result.ip.replace(/\./g, '-')}`);
-                const portsContainer = document.getElementById(`ports-${result.ip.replace(/\./g, '-')}`);
-
-                if (typeElement) {
-                    typeElement.textContent = result.device_type;
-                    typeElement.classList.replace('bg-secondary', 'bg-primary');
-                }
-
-                if (portsContainer) {
-                    let portsHtml = '<h6>Ports Ouverts:</h6>';
-                    if (result.ports.length > 0) {
-                        portsHtml += '<ul class="list-group list-group-flush">';
-                        result.ports.forEach(p => {
-                            portsHtml += `<li class="list-group-item bg-transparent d-flex justify-content-between"><span>${p.port}/tcp</span> <span class="text-muted">${p.service}</span></li>`;
-                        });
-                        portsHtml += '</ul>';
-                    } else {
-                        portsHtml = '<p class="text-muted">Aucun port commun ouvert.</p>';
-                    }
-                    portsContainer.innerHTML = portsHtml;
-                }
-            });
-
-            // --- Gestion des actions utilisateur ---
-
-            networkScanBtn.addEventListener('click', () => {
-                // Réinitialisation de l'interface
-                resultsContainer.innerHTML = '';
-                if (placeholder) resultsContainer.appendChild(placeholder);
-                placeholder.style.display = 'block';
-                discoveredHosts = [];
-                portScanBtn.disabled = true;
-                portScanBtn.classList.replace('btn-info', 'btn-secondary');
-                
-                socket.emit('start_network_scan');
-                networkScanBtn.disabled = true;
-                setTimeout(() => networkScanBtn.disabled = false, 3000);
-            });
-
-            portScanBtn.addEventListener('click', () => {
-                if (discoveredHosts.length > 0) {
-                    // Met à jour l'UI pour montrer que le scan de ports est en cours
-                    discoveredHosts.forEach(host => {
-                        const portsContainer = document.getElementById(`ports-${host.ip.replace(/\./g, '-')}`);
-                        if (portsContainer) {
-                            portsContainer.innerHTML = `
-                                <div class="spinner-border spinner-border-sm text-info" role="status"></div>
-                                <small> Analyse en cours...</small>
-                            `;
-                        }
-                    });
-                    socket.emit('start_port_scan', { hosts: discoveredHosts });
-                    portScanBtn.disabled = true;
-                }
-            });
-        });
-    </script>
+    
 </body>
 </html>

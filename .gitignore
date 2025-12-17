@@ -26,6 +26,7 @@ wheels/
 MANIFEST
 
 # Environments
+*.pyc
 .env
 .venv/
 venv/
@@ -38,6 +39,8 @@ env/
 .spyproject
 
 # Operating System files
+*.log
+instance/
 .DS_Store
 Thumbs.db
 
@@ -50,3 +53,7 @@ Thumbs.db
 .coverage
 .pytest_cache/
 .ipynb_checkpoints/
+
+# Web & DB
+node_modules/
+*.sqlite3
