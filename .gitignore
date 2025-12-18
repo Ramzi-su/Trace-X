@@ -31,7 +31,7 @@ MANIFEST
 .venv/
 venv/
 env/
-
+.vagrant/
 # IDE-specific files
 .vscode/
 .idea/
